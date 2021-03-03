@@ -24,6 +24,7 @@ namespace WingProcedural
         private static readonly float alphaActive = 0.75f;
 
         public static bool numericInput = false;
+        public static bool angleChangd = false;
 
         public static void ConfigureStyles()
         {

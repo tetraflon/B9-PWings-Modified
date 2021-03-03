@@ -87,6 +87,7 @@ namespace WingProcedural
                 }
                 if (handlesRoot)
                 {
+                    handlesRoot.transform.SetParent(null, false);
                     handlesRoot.SetActive(false);
                     DontDestroyOnLoad(handlesRoot);
 
