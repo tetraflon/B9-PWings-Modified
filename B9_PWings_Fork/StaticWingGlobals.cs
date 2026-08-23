@@ -75,7 +75,12 @@ namespace WingProcedural
         public IEnumerator LoadBundleAssets()
         {
             Debug.Log("[B9PW] Aquiring bundle data");
-            AssetBundle shaderBundle = AssetBundle.LoadFromFile(BundlePath);
+
+            // Try the dedicated shader bundle first (may carry an updated compositing shader).
+            string shaderBundlePath = BundlePath.Replace("pwings_windows.bundle", "pwings_shader_windows.bundle")
+                                                .Replace("pwings_linux.bundle", "pwings_shader_linux.bundle")
+                                                .Replace("pwings_macosx.bundle", "pwings_shader_macosx.bundle");
+            AssetBundle shaderBundle = AssetBundle.LoadFromFile(shaderBundlePath);
 
             if (shaderBundle != null)
             {
@@ -85,64 +90,103 @@ namespace WingProcedural
                     if (objects[i].name == "KSP/Specular Layered")
                     {
                         wingShader = objects[i];
-                        Debug.Log($"[B9PW] Wing shader \"{wingShader.name}\" loaded. Shader supported? {wingShader.isSupported}");
+                        Debug.Log($"[B9PW] Wing shader \"{wingShader.name}\" loaded (shader bundle). Supported? {wingShader.isSupported}");
                     }
                 }
-
-                #region Handle gizmos---CarnationRED 2020-6
-                GameObject[] objects1 = shaderBundle.LoadAllAssets<GameObject>();
-                for (int i = 0; i < objects1.Length; i++)
-                {
-                    GameObject item = objects1[i];
-                    if (item.name.Equals("handlesRoot"))
-                    {
-                        handlesRoot = Instantiate(item);
-                        break;
-                    }
-                }
-                if (handlesRoot)
-                {
-                    handlesRoot.transform.SetParent(null, false);
-                    handlesRoot.SetActive(false);
-                    DontDestroyOnLoad(handlesRoot);
-
-                    normalHandles = handlesRoot.transform.Find("Normal").gameObject;
-                    ctrlSurfHandles = handlesRoot.transform.Find("CtrlSurf").gameObject;
-                    hingeIndicator = handlesRoot.transform.Find("RotateAxis").gameObject;
-                    foreach (Transform obj in normalHandles.transform)
-                        obj.gameObject.AddComponent<EditorHandle>();
-
-                    foreach (Transform obj in ctrlSurfHandles.transform)
-                        obj.gameObject.AddComponent<EditorHandle>();
-
-                    handleLength = normalHandles.transform.Find("handleLength").gameObject;
-                    handleWidthRootFront = normalHandles.transform.Find("handleWidthRootFront").gameObject;
-                    handleWidthRootBack = normalHandles.transform.Find("handleWidthRootBack").gameObject;
-                    handleWidthTipFront = normalHandles.transform.Find("handleWidthTipFront").gameObject;
-                    handleWidthTipBack = normalHandles.transform.Find("handleWidthTipBack").gameObject;
-                    handleLeadingRoot = normalHandles.transform.Find("handleLeadingRoot").gameObject;
-                    handleLeadingTip = normalHandles.transform.Find("handleLeadingTip").gameObject;
-                    handleTrailingRoot = normalHandles.transform.Find("handleTrailingRoot").gameObject;
-                    handleTrailingTip = normalHandles.transform.Find("handleTrailingTip").gameObject;
-
-                    ctrlHandleLength1 = ctrlSurfHandles.transform.Find("ctrlHandleLength1").gameObject;
-                    ctrlHandleLength2 = ctrlSurfHandles.transform.Find("ctrlHandleLength2").gameObject;
-                    ctrlHandleRootWidthOffset = ctrlSurfHandles.transform.Find("ctrlHandleRootWidthOffset").gameObject;
-                    ctrlHandleTipWidthOffset = ctrlSurfHandles.transform.Find("ctrlHandleTipWidthOffset").gameObject;
-                    ctrlHandleTrailingRoot = ctrlSurfHandles.transform.Find("ctrlHandleTrailingRoot").gameObject;
-                    ctrlHandleTrailingTip = ctrlSurfHandles.transform.Find("ctrlHandleTrailingTip").gameObject;
-                }
-                #endregion
-
-                yield return null;
-                yield return null; // unknown how neccesary this is
-
-                Debug.Log("[B9PW] unloading bundle");
-                shaderBundle.Unload(false); // unload the raw asset bundle
             }
             else
             {
-                Debug.Log("[B9PW] Error: Found no asset bundle to load");
+                Debug.Log("[B9PW] No dedicated shader bundle found, will load shader from legacy bundle");
+            }
+
+            if (wingShader == null)
+            {
+                AssetBundle legacyBundle = AssetBundle.LoadFromFile(BundlePath);
+
+                if (legacyBundle != null)
+                {
+                    Shader[] objects = legacyBundle.LoadAllAssets<Shader>();
+                    for (int i = 0; i < objects.Length; ++i)
+                    {
+                        if (objects[i].name == "KSP/Specular Layered")
+                        {
+                            wingShader = objects[i];
+                            Debug.Log($"[B9PW] Wing shader \"{wingShader.name}\" loaded (legacy bundle). Supported? {wingShader.isSupported}");
+                        }
+                    }
+
+                    #region Handle gizmos---CarnationRED 2020-6
+                    GameObject[] objects1 = legacyBundle.LoadAllAssets<GameObject>();
+                    for (int i = 0; i < objects1.Length; i++)
+                    {
+                        GameObject item = objects1[i];
+                        if (item.name.Equals("handlesRoot"))
+                        {
+                            handlesRoot = Instantiate(item);
+                            break;
+                        }
+                    }
+                    if (handlesRoot)
+                    {
+                        handlesRoot.transform.SetParent(null, false);
+                        handlesRoot.SetActive(false);
+                        DontDestroyOnLoad(handlesRoot);
+
+                        normalHandles = handlesRoot.transform.Find("Normal").gameObject;
+                        ctrlSurfHandles = handlesRoot.transform.Find("CtrlSurf").gameObject;
+                        hingeIndicator = handlesRoot.transform.Find("RotateAxis").gameObject;
+                        foreach (Transform obj in normalHandles.transform)
+                            obj.gameObject.AddComponent<EditorHandle>();
+
+                        foreach (Transform obj in ctrlSurfHandles.transform)
+                            obj.gameObject.AddComponent<EditorHandle>();
+
+                        handleLength = normalHandles.transform.Find("handleLength").gameObject;
+                        handleWidthRootFront = normalHandles.transform.Find("handleWidthRootFront").gameObject;
+                        handleWidthRootBack = normalHandles.transform.Find("handleWidthRootBack").gameObject;
+                        handleWidthTipFront = normalHandles.transform.Find("handleWidthTipFront").gameObject;
+                        handleWidthTipBack = normalHandles.transform.Find("handleWidthTipBack").gameObject;
+                        handleLeadingRoot = normalHandles.transform.Find("handleLeadingRoot").gameObject;
+                        handleLeadingTip = normalHandles.transform.Find("handleLeadingTip").gameObject;
+                        handleTrailingRoot = normalHandles.transform.Find("handleTrailingRoot").gameObject;
+                        handleTrailingTip = normalHandles.transform.Find("handleTrailingTip").gameObject;
+
+                        ctrlHandleLength1 = ctrlSurfHandles.transform.Find("ctrlHandleLength1").gameObject;
+                        ctrlHandleLength2 = ctrlSurfHandles.transform.Find("ctrlHandleLength2").gameObject;
+                        ctrlHandleRootWidthOffset = ctrlSurfHandles.transform.Find("ctrlHandleRootWidthOffset").gameObject;
+                        ctrlHandleTipWidthOffset = ctrlSurfHandles.transform.Find("ctrlHandleTipWidthOffset").gameObject;
+                        ctrlHandleTrailingRoot = ctrlSurfHandles.transform.Find("ctrlHandleTrailingRoot").gameObject;
+                        ctrlHandleTrailingTip = ctrlSurfHandles.transform.Find("ctrlHandleTrailingTip").gameObject;
+                    }
+                    #endregion
+
+                    yield return null;
+                    yield return null; // unknown how neccesary this is
+
+                    Debug.Log("[B9PW] unloading bundle");
+                    legacyBundle.Unload(false); // unload the raw asset bundle
+                }
+                else
+                {
+                    Debug.Log("[B9PW] Error: Found no asset bundle to load");
+                }
+
+                if (legacyBundle != null)
+                {
+                    yield return null;
+                    yield return null; // unknown how neccesary this is
+
+                    Debug.Log("[B9PW] unloading legacy bundle");
+                    legacyBundle.Unload(false); // unload the raw asset bundle
+                }
+            }
+
+            if (shaderBundle != null)
+            {
+                yield return null;
+                yield return null;
+                Debug.Log("[B9PW] unloading shader bundle");
+                shaderBundle.Unload(false);
             }
         }
 

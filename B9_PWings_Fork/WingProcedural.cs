@@ -4318,7 +4318,8 @@ namespace WingProcedural
 
         private Vector2 GetVertexUV2(float selectedLayer)
         {
-            return new Vector2(selectedLayer == 0 ? 0f : (selectedLayer - 1f) / 3f, 1f);
+            // uv2.y: 1 = uniform/coat fill (pure colour), 0 = material layer (pattern x colour tint)
+            return selectedLayer == 0 ? new Vector2(0f, 1f) : new Vector2((selectedLayer - 1f) / 3f, 0f);
         }
 
         private Color ColorHSBToRGB(Vector4 hsbColor)
