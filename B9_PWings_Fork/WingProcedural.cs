@@ -2275,6 +2275,26 @@ namespace WingProcedural
             {
                 SetMaterialReferences();
             }
+            else
+            {
+                // Materials already exist: re-run the texture lookup and re-bind.
+                // The first SetMaterialReferences may have run before GameDatabase textures
+                // (or the wingShader) were available, leaving a white default material.
+                if (!isCtrlSrf)
+                    SetTextures(meshFilterWingSurface, meshFiltersWingEdgeTrailing[0]);
+                else
+                    SetTextures(meshFilterCtrlSurface, meshFilterCtrlFrame);
+                if (materialLayeredSurfaceTextureMain != null && materialLayeredSurfaceTextureMask != null)
+                {
+                    materialLayeredSurface.SetTexture("_MainTex", materialLayeredSurfaceTextureMain);
+                    materialLayeredSurface.SetTexture("_Emissive", materialLayeredSurfaceTextureMask);
+                }
+                if (materialLayeredEdgeTextureMain != null && materialLayeredEdgeTextureMask != null)
+                {
+                    materialLayeredEdge.SetTexture("_MainTex", materialLayeredEdgeTextureMain);
+                    materialLayeredEdge.SetTexture("_Emissive", materialLayeredEdgeTextureMask);
+                }
+            }
 
             if (materialLayeredSurface != null)
             {
@@ -2305,6 +2325,8 @@ namespace WingProcedural
 
         private void SetMaterialReferences()
         {
+            DebugLogWithID("SetMaterialReferences", "wingShader: " + (StaticWingGlobals.wingShader == null ? "NULL" : StaticWingGlobals.wingShader.name) + " | surfaceMat null? " + (materialLayeredSurface == null) + " | edgeMat null? " + (materialLayeredEdge == null));
+
             if (materialLayeredSurface == null)
             {
                 materialLayeredSurface = new Material(StaticWingGlobals.wingShader);
@@ -2371,18 +2393,12 @@ namespace WingProcedural
             materialLayeredSurfaceTextureMain = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Parts/Aero_Wing_Procedural/wing_surface_layered", false);
             materialLayeredSurfaceTextureMask = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Parts/Aero_Wing_Procedural/wing_surface_layered_colormask", false);
 
-            if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateMaterials)
-            {
-                DebugLogWithID("SetTextures", "Surface Main: " + materialLayeredSurfaceTextureMain + " | Mask: " + materialLayeredSurfaceTextureMask);
-            }
+            DebugLogWithID("SetTextures", "Surface DIFF: " + (materialLayeredSurfaceTextureMain == null ? "NULL" : materialLayeredSurfaceTextureMain.name) + " | MASK: " + (materialLayeredSurfaceTextureMask == null ? "NULL" : materialLayeredSurfaceTextureMask.name));
 
             materialLayeredEdgeTextureMain = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Parts/Aero_Wing_Procedural/wing_edge_layered", false);
             materialLayeredEdgeTextureMask = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Parts/Aero_Wing_Procedural/wing_edge_layered_colormask", false);
 
-            if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateMaterials)
-            {
-                DebugLogWithID("SetTextures", "Edge Main: " + materialLayeredEdgeTextureMain + " | Mask: " + materialLayeredEdgeTextureMask);
-            }
+            DebugLogWithID("SetTextures", "Edge DIFF: " + (materialLayeredEdgeTextureMain == null ? "NULL" : materialLayeredEdgeTextureMain.name) + " | MASK: " + (materialLayeredEdgeTextureMask == null ? "NULL" : materialLayeredEdgeTextureMask.name));
         }
 
         #endregion Materials
