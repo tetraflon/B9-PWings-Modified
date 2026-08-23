@@ -142,23 +142,19 @@ Shader "KSP/Specular Layered"
 					saturate(IN.uv2_Emissive.x * 3 - 1)
 				);
 			
-			// composite: original B9PW mask-lerp, with a colour floor so EVERY layer
-			// (incl. HRSI, whose mask channel A is ~0.09 by design) still tints:
-			//   mColor = saturate(mask + 0.45)
-			//  uv2_Emissive.y == 1 -> uniform/coat fill: pure vertex colour
-			//  uv2_Emissive.y == 0 -> material layer: pattern boosted then blended with colour by mColor
+			// composite: multiply-tint with a contrast stretch so the layered pattern
+			// (panel lines in the DIFF channels) stays clearly visible under the vertex colour.
+			// A mask-lerp washes the lines out when the mask channel is ~0.9 (Standard/Reinforced/LRSI).
+			//   pattern = saturate((albedo - 0.45) * 2.2)   (stretch: lines -> dark, panels -> bright)
+			//   uv2_Emissive.y == 1 -> uniform/coat fill: pure vertex colour
+			//   uv2_Emissive.y == 0 -> material layer: pattern * colour (multiply tint)
 			float3 composite =
 				lerp
 				(
 					albedoGrayscaleAndMask.xxx,
 					lerp
 					(
-						lerp
-						(
-							saturate(albedoGrayscaleAndMask.x + ((1 - albedoGrayscaleAndMask.y) * pow(albedoGrayscaleAndMask.x, 2))).xxx,
-							IN.color.xyz,
-							saturate(albedoGrayscaleAndMask.y + 0.45)
-						),
+						saturate((albedoGrayscaleAndMask.xxx - 0.45f) * 2.2f) * IN.color.xyz,
 						IN.color.xyz,
 						IN.uv2_Emissive.y
 					),
