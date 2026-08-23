@@ -3243,6 +3243,12 @@ namespace WingProcedural
                 {
                     forceLegacyTextures = !forceLegacyTextures;
                     RefreshGeometry();
+                    foreach (Part p in part.symmetryCounterparts)
+                    {
+                        if (p == null) continue;
+                        WingProcedural wing = FirstOfTypeOrDefault<WingProcedural>(p.Modules);
+                        if (wing != null) wing.RefreshGeometry();
+                    }
                 }
 
                     GUILayout.EndVertical();
