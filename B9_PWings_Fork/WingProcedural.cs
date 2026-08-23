@@ -4376,7 +4376,7 @@ namespace WingProcedural
                     b = 0;
                 }
             }
-            return new Color(Mathf.Clamp01(r), Mathf.Clamp01(g), Mathf.Clamp01(b), hsbColor.w);
+            return new Color(Mathf.Clamp01(r), Mathf.Clamp01(g), Mathf.Clamp01(b), 1f);
         }
 
         #endregion Coloration
