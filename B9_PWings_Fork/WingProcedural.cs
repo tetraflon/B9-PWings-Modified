@@ -1317,6 +1317,20 @@ namespace WingProcedural
             return forceLegacyTextures || part.GetComponent("KSPTextureSwitch") == null;
         }
 
+        /// <summary>
+        /// Enable or disable all Texture-Unlimited KSPTextureSwitch modules on this part.
+        /// Disabling them prevents TU from re-applying its material over our legacy one.
+        /// </summary>
+        private void SetTextureSwitchEnabled(bool enabled)
+        {
+            if (part == null) return;
+            foreach (PartModule pm in part.Modules)
+            {
+                if (pm.moduleName == "KSPTextureSwitch")
+                    pm.isEnabled = enabled;
+            }
+        }
+
         #endregion Unity stuff and Callbacks/events
 
         #region Geometry
@@ -3251,12 +3265,23 @@ namespace WingProcedural
                 if (GUILayout.Button(Localizer.Format(forceLegacyTextures ? "#autoLOC_B9_Aerospace_WingStuff_1000179" : "#autoLOC_B9_Aerospace_WingStuff_1000180"), UIUtility.uiStyleButton, GUILayout.MaxWidth(50f)))		// 1000179 = Original / 1000180 = TU
                 {
                     forceLegacyTextures = !forceLegacyTextures;
+                    // Freeze/un-freeze Texture Unlimited's KSPTextureSwitch so it stops overriding
+                    // our legacy material the moment we switch to "Original".
+                    SetTextureSwitchEnabled(!forceLegacyTextures);
                     RefreshGeometry();
                     foreach (Part p in part.symmetryCounterparts)
                     {
                         if (p == null) continue;
                         WingProcedural wing = FirstOfTypeOrDefault<WingProcedural>(p.Modules);
                         if (wing != null) wing.RefreshGeometry();
+                        if (p.GetComponent("KSPTextureSwitch") != null)
+                        {
+                            foreach (PartModule pm in p.Modules)
+                            {
+                                if (pm.moduleName == "KSPTextureSwitch")
+                                    pm.isEnabled = !forceLegacyTextures;
+                            }
+                        }
                     }
                 }
 
