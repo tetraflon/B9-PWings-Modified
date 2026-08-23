@@ -3564,10 +3564,7 @@ namespace WingProcedural
                 //Debug.Log("B9PW:" + name  + " Value changed to " + field);
                 if (fieldID == 201 || fieldID == 202)
                 {
-                    if(!UIUtility.numericInput)
-                    {
-                        CalcBase(fieldID);
-                    }
+                    CalcBase(fieldID);
                     angleType = fieldID;
                 }
             }
