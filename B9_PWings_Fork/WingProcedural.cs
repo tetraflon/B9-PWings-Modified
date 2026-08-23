@@ -3231,7 +3231,12 @@ namespace WingProcedural
                     sharedSweptAngleBack = CalcAngleBack();
 
                 }
-                if (GUILayout.Button(Localizer.Format(Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000163")), UIUtility.uiStyleButton, GUILayout.MaxWidth(50f)))		// #autoLOC_B9_Aerospace_WingStuff_1000163 = update
+                if (GUILayout.Button(Localizer.Format(aeroIsLiftingSurface ? "#autoLOC_B9_Aerospace_WingStuff_1000163" : "#autoLOC_B9_Aerospace_WingStuff_1000164"), UIUtility.uiStyleButton, GUILayout.MaxWidth(50f)))		// #autoLOC_B9_Aerospace_WingStuff_1000163 = Surface Config: Lifting
+                {
+                    ToggleLiftConfiguration();
+                }
+
+                if (GUILayout.Button(Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000178"), UIUtility.uiStyleButton, GUILayout.MaxWidth(50f)))		// #autoLOC_B9_Aerospace_WingStuff_1000178 = Update
                 {
                     CalcBase(angleType);
                 }
