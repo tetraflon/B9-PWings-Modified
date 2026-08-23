@@ -142,11 +142,10 @@ Shader "KSP/Specular Layered"
 					saturate(IN.uv2_Emissive.x * 3 - 1)
 				);
 			
-			// composite:
-			//  uv2_Emissive.y == 1 -> uniform/coat fill: pure vertex color
-			//  uv2_Emissive.y == 0 -> material layer: grayscale pattern kept, tinted by vertex color
-			//  with a colour floor so every layer (incl. ones with a dark mask channel) shows the tint:
-			//   mColor = saturate(mask + 0.25)  (higher floor = more colour, less raw pattern)
+			// composite (original B9PW logic - keeps the layered texture pattern clearly
+			// visible while the vertex colour tints it through the mask channel):
+			//  uv2_Emissive.y == 1 -> uniform/coat fill: pure vertex colour
+			//  uv2_Emissive.y == 0 -> material layer: pattern boosted then blended with colour by the mask
 			float3 composite =
 				lerp
 				(
@@ -157,7 +156,7 @@ Shader "KSP/Specular Layered"
 						(
 							saturate(albedoGrayscaleAndMask.x + ((1 - albedoGrayscaleAndMask.y) * pow(albedoGrayscaleAndMask.x, 2))).xxx,
 							IN.color.xyz,
-							saturate(albedoGrayscaleAndMask.y + 0.25)
+							albedoGrayscaleAndMask.y
 						),
 						IN.color.xyz,
 						IN.uv2_Emissive.y
