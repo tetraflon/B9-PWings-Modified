@@ -182,12 +182,13 @@ namespace WingProcedural
                     Debug.Log("[B9PW] Error: Found no asset bundle to load");
                 }
 
+                // NOTE: the shader bundle is intentionally NOT unloaded: the instantiated Shader asset must
+                // stay alive for the whole session, and re-loading the same path while a previous AssetBundle
+                // handle is still pending GC can make LoadFromFile return null (seen in Unity 2019.4).
+                // A single shader in memory is negligible, and this module only loads it once per session.
                 if (shaderBundle != null)
                 {
-                    yield return null;
-                    yield return null;
-                    Debug.Log("[B9PW] unloading shader bundle");
-                    shaderBundle.Unload(false);
+                    Debug.Log("[B9PW] keeping shader bundle loaded (shader must stay alive)");
                 }
             }
             finally
