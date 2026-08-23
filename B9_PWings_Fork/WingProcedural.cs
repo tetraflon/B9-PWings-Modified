@@ -779,6 +779,9 @@ namespace WingProcedural
         public static bool assemblyRFUsed = false;
         public static bool assemblyMFTUsed = false;
         public static bool assemblyBDAUsed = false;
+        // When true, always use the original "Specular Layered" shader/material even if Texture
+        // Unlimited (or a KSPTextureSwitch system) is present; lets you switch back to stock rendering.
+        public static bool forceLegacyTextures = false;
         // if current part uses one of the Configurable Container modules
         public bool moduleCCUsed = false;
 
@@ -1311,7 +1314,7 @@ namespace WingProcedural
         }
         private bool ApplyLegacyTextures()
         {
-            return part.GetComponent("KSPTextureSwitch") == null;
+            return forceLegacyTextures || part.GetComponent("KSPTextureSwitch") == null;
         }
 
         #endregion Unity stuff and Callbacks/events
@@ -3234,6 +3237,12 @@ namespace WingProcedural
                 if (GUILayout.Button(Localizer.Format(aeroIsLiftingSurface ? "#autoLOC_B9_Aerospace_WingStuff_1000163" : "#autoLOC_B9_Aerospace_WingStuff_1000164"), UIUtility.uiStyleButton, GUILayout.MaxWidth(50f)))		// #autoLOC_B9_Aerospace_WingStuff_1000163 = Surface Config: Lifting
                 {
                     ToggleLiftConfiguration();
+                }
+
+                if (GUILayout.Button(Localizer.Format(forceLegacyTextures ? "#autoLOC_B9_Aerospace_WingStuff_1000179" : "#autoLOC_B9_Aerospace_WingStuff_1000180"), UIUtility.uiStyleButton, GUILayout.MaxWidth(50f)))		// 1000179 = Original / 1000180 = TU
+                {
+                    forceLegacyTextures = !forceLegacyTextures;
+                    RefreshGeometry();
                 }
 
                     GUILayout.EndVertical();
