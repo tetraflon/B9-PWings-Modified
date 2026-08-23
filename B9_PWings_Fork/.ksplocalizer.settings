@@ -3,7 +3,7 @@
   <TagAutoLocPortion>#autoLOC</TagAutoLocPortion>
   <TagProjectPortion>B9_Aerospace_WingStuff</TagProjectPortion>
   <IDType>ProjectBased</IDType>
-  <NextProjectID>1000171</NextProjectID>
+  <NextProjectID>1000178</NextProjectID>
   <BaseCfgFile>refactor.cfg</BaseCfgFile>
   <LanguageCodes>en-us,es-es,ja,ru,zh-cn,de-de,fr-fr,it-it,pt-br</LanguageCodes>
   <UseMultiCfgFiles>true</UseMultiCfgFiles>

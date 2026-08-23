@@ -561,8 +561,25 @@ namespace WingProcedural
             return isCtrlSrf ? set.y : set.x;
         }
 
-        #endregion Default values
+                #endregion Default values
 
+        #region Lift configuration switching
+
+        // Has to be situated here as this KSPEvent is not correctly added Part.Events otherwise
+        [KSPEvent(guiActive = false, guiActiveEditor = true, guiName = "#autoLOC_B9_Aerospace_WingStuff_1000163", active = true)]		// #autoLOC_B9_Aerospace_WingStuff_1000163 = Surface Config: Lifting
+        public void ToggleLiftConfiguration()
+        {
+
+            if (!CanBeFueled || assemblyFARUsed)
+            {
+                return;
+            }
+
+            aeroIsLiftingSurface = !aeroIsLiftingSurface;
+            LiftStructuralTypeChanged();
+        }
+
+        #endregion Lift configuration switching
 
         #region Fuel configuration switching
 
@@ -1954,6 +1971,10 @@ namespace WingProcedural
             if (updateAerodynamics)
             {
                 CalculateAerodynamicValues();
+                if (aeroIsLiftingSurface)
+                    Events["ToggleLiftConfiguration"].guiName = Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000163");//Surface Config: Lifting
+                else
+                    Events["ToggleLiftConfiguration"].guiName = Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000164");//Surface Config: Not Lifting
             }
         }
 
@@ -2516,6 +2537,8 @@ namespace WingProcedural
         public float aeroUIMass;
         [KSPField(isPersistant = true, guiActive = false, guiActiveEditor = true, guiName = "#autoLOC_B9_Aerospace_WingStuff_1000126")]		// #autoLOC_B9_Aerospace_WingStuff_1000126 = Stock lifting area
         public float stockLiftCoefficient;
+        [KSPField(isPersistant = true, guiActiveEditor = false, guiActive = false, guiName = "Is Lifting Surface", guiFormat = "S4")]
+        public bool aeroIsLiftingSurface = true;
 
         public double aeroStatCd;
         public double aeroStatCl;
@@ -2723,7 +2746,8 @@ namespace WingProcedural
             // Stock-only values
             if (!assemblyFARUsed)
             {
-                stockLiftCoefficient = (float)aeroStatSurfaceArea / 3.52f;
+                float stockLiftCoeff = (float)aeroStatSurfaceArea / 3.52f;
+                stockLiftCoefficient = aeroIsLiftingSurface ? stockLiftCoeff : 0f;
                 float x_col = pseudotaper_ratio * sharedBaseOffsetTip;
                 float y_col = pseudotaper_ratio * sharedBaseLength;
 
@@ -2735,7 +2759,7 @@ namespace WingProcedural
                     }
 
                     part.Modules.GetModule<ModuleLiftingSurface>().deflectionLiftCoeff = (float)Math.Round(stockLiftCoefficient, 2);
-                    aeroUIMass = stockLiftCoefficient * 0.1f;
+                    aeroUIMass = stockLiftCoeff * 0.1f;
                     part.CoLOffset = new Vector3(y_col, -x_col, 0.0f);
                 }
                 else
@@ -2748,7 +2772,7 @@ namespace WingProcedural
                     ModuleControlSurface mCtrlSrf = FirstOfTypeOrDefault<ModuleControlSurface>(part.Modules);
                     mCtrlSrf.deflectionLiftCoeff = (float)Math.Round(stockLiftCoefficient, 2);
                     mCtrlSrf.ctrlSurfaceArea = aeroConstControlSurfaceFraction;
-                    aeroUIMass = stockLiftCoefficient * (1 + mCtrlSrf.ctrlSurfaceArea) * 0.1f;
+                    aeroUIMass = stockLiftCoeff * (1 + mCtrlSrf.ctrlSurfaceArea) * 0.1f;
                     part.CoLOffset = isWingAsCtrlSrf
                         ? new Vector3(y_col, -x_col, 0.0f)
                         : new Vector3(y_col - 0.5f * sharedBaseLength, -0.25f * (sharedBaseWidthTip + sharedBaseWidthRoot), 0.0f);
@@ -3229,9 +3253,9 @@ namespace WingProcedural
                     DrawCheck(ref sharedPropEdgePref, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000158"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000159"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000160"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000161"), 102);		// #autoLOC_B9_Aerospace_WingStuff_1000158 = Include edges in definitions		// #autoLOC_B9_Aerospace_WingStuff_1000159 = No		// #autoLOC_B9_Aerospace_WingStuff_1000160 = Yes		// #autoLOC_B9_Aerospace_WingStuff_1000161 = EdgeIncluded
                     if (sharedPropAnglePref)
                     {
-                        DrawCheck(ref sharedPropLockPref, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000164"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000008"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000009"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000167"), 105);		// #autoLOC_B9_Aerospace_WingStuff_1000164 = Lock Tip width instead of base width		// #autoLOC_B9_Aerospace_WingStuff_1000167 = Lock Tip
-                        DrawCheck(ref sharedPropLock2Pref, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000165"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000008"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000009"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000167"), 106);		// #autoLOC_B9_Aerospace_WingStuff_1000165 = Lock Tip mid-point instead of base
-                        DrawCheck(ref sharedPropLock3Pref, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000166"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000008"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000009"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000167"), 107);		// #autoLOC_B9_Aerospace_WingStuff_1000166 = Lock width and change offset only
+                        DrawCheck(ref sharedPropLockPref, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000171"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000008"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000009"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000174"), 105);		// #autoLOC_B9_Aerospace_WingStuff_1000171 = Lock Tip width instead of base width		// #autoLOC_B9_Aerospace_WingStuff_1000174 = Lock Tip
+                        DrawCheck(ref sharedPropLock2Pref, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000172"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000008"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000009"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000174"), 106);		// #autoLOC_B9_Aerospace_WingStuff_1000172 = Lock Tip mid-point instead of base
+                        DrawCheck(ref sharedPropLock3Pref, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000173"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000008"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000009"), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000174"), 107);		// #autoLOC_B9_Aerospace_WingStuff_1000173 = Lock width and change offset only
                     }
                 }
                 DrawFieldGroupHeader(ref sharedFieldGroupBaseStatic, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000013"));		// #autoLOC_B9_Aerospace_WingStuff_1000013 = Base
@@ -3244,7 +3268,7 @@ namespace WingProcedural
                     DrawField(ref sharedBaseLength, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseLengthLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000014"), uiColorSliderBase, 0, 0, ref sharedBaseLengthInt);		// #autoLOC_B9_Aerospace_WingStuff_1000014 = Length
                     if (!sharedPropAnglePref)
                     {
-                        DrawField(ref sharedBaseWidthRoot, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseWidthRootLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000015"), uiColorSliderBase, 1, 0, ref sharedBaseWidthRInt);		// #autoLOC_B9_Aerospace_WingStuff_1000015 = Width (root)
+                        DrawLimited(ref sharedBaseWidthRoot, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseWidthRootLimits), GetLimitsFromType(sharedBaseWidthRootLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000015"), uiColorSliderBase, 1, 0);		// #autoLOC_B9_Aerospace_WingStuff_1000015 = Width (root)
                         DrawField(ref sharedBaseWidthTip, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseWidthTipLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000016"), uiColorSliderBase, 2, 0, ref sharedBaseWidthTInt, true);		// #autoLOC_B9_Aerospace_WingStuff_1000016 = Width (tip)
                         DrawOffset(ref sharedBaseOffsetTip, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseOffsetLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000017"), uiColorSliderBase, 4, 0, ref sharedBaseOffsetTInt, true);		// #autoLOC_B9_Aerospace_WingStuff_1000017 = Offset (tip)
                     }
@@ -3261,23 +3285,23 @@ namespace WingProcedural
                         }
                         else if (!sharedPropLockPref)
                         {
-                            DrawField(ref sharedBaseWidthRoot, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseWidthRootLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000015"), uiColorSliderBase, 1, 0, ref sharedBaseWidthRInt);		// #autoLOC_B9_Aerospace_WingStuff_1000015 = Width (root)
+                            DrawLimited(ref sharedBaseWidthRoot, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseWidthRootLimits), GetLimitsFromType(sharedBaseWidthRootLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000015"), uiColorSliderBase, 1, 0);		// #autoLOC_B9_Aerospace_WingStuff_1000015 = Width (root)
                         }
                     }
 
-                    DrawField(ref sharedBaseThicknessRoot, sharedIncrementSmall, GetStep2(sharedBaseThicknessLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000020"), uiColorSliderBase, 5, 0, ref sharedBaseThicknessRInt);		// #autoLOC_B9_Aerospace_WingStuff_1000020 = Thickness (root)
-                    DrawField(ref sharedBaseThicknessTip, sharedIncrementSmall, GetStep2(sharedBaseThicknessLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000021"), uiColorSliderBase, 6, 0, ref sharedBaseThicknessTInt);		// #autoLOC_B9_Aerospace_WingStuff_1000021 = Thickness (tip)
+                    DrawLimited(ref sharedBaseThicknessRoot, sharedIncrementSmall, GetStep2(sharedBaseThicknessLimits), sharedBaseThicknessLimits, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000020"), uiColorSliderBase, 5, 0);		// #autoLOC_B9_Aerospace_WingStuff_1000020 = Thickness (root)
+                    DrawLimited(ref sharedBaseThicknessTip, sharedIncrementSmall, GetStep2(sharedBaseThicknessLimits), sharedBaseThicknessLimits, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000021"), uiColorSliderBase, 6, 0);		// #autoLOC_B9_Aerospace_WingStuff_1000021 = Thickness (tip)
                     //Debug.Log("B9PW: base complete");
                 }
                 else if (sharedFieldGroupBaseStatic & isCtrlSrf)
                 {
                     DrawField(ref sharedBaseLength, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseLengthLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000022"), uiColorSliderBase, 0, 0, ref sharedBaseLengthInt);		// #autoLOC_B9_Aerospace_WingStuff_1000022 = Length
-                    DrawField(ref sharedBaseWidthRoot, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseWidthRootLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000023"), uiColorSliderBase, 1, 0, ref sharedBaseWidthRInt);		// #autoLOC_B9_Aerospace_WingStuff_1000023 = Width (root)
+                    DrawLimited(ref sharedBaseWidthRoot, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseWidthRootLimits), GetLimitsFromType(sharedBaseWidthRootLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000023"), uiColorSliderBase, 1, 0);		// #autoLOC_B9_Aerospace_WingStuff_1000023 = Width (root)
                     DrawField(ref sharedBaseWidthTip, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseWidthTipLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000024"), uiColorSliderBase, 2, 0, ref sharedBaseWidthTInt);		// #autoLOC_B9_Aerospace_WingStuff_1000024 = Width (tip)
                     DrawOffset(ref sharedBaseOffsetRoot, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseOffsetLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000025"), uiColorSliderBase, 3, 0, ref sharedBaseOffsetRInt);		// #autoLOC_B9_Aerospace_WingStuff_1000025 = Offset (root)
                     DrawOffset(ref sharedBaseOffsetTip, GetIncrementFromType(sharedIncrementMain, sharedIncrementSmall), GetStep(sharedBaseOffsetLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000026"), uiColorSliderBase, 4, 0, ref sharedBaseOffsetTInt);		// #autoLOC_B9_Aerospace_WingStuff_1000026 = Offset (tip)
-                    DrawField(ref sharedBaseThicknessRoot, sharedIncrementSmall, GetStep2(sharedBaseThicknessLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000027"), uiColorSliderBase, 5, 0, ref sharedBaseThicknessRInt);		// #autoLOC_B9_Aerospace_WingStuff_1000027 = Thickness (root)
-                    DrawField(ref sharedBaseThicknessTip, sharedIncrementSmall, GetStep2(sharedBaseThicknessLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000028"), uiColorSliderBase, 6, 0, ref sharedBaseThicknessTInt);		// #autoLOC_B9_Aerospace_WingStuff_1000028 = Thickness (tip)
+                    DrawLimited(ref sharedBaseThicknessRoot, sharedIncrementSmall, GetStep2(sharedBaseThicknessLimits), sharedBaseThicknessLimits, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000027"), uiColorSliderBase, 5, 0);		// #autoLOC_B9_Aerospace_WingStuff_1000027 = Thickness (root)
+                    DrawLimited(ref sharedBaseThicknessTip, sharedIncrementSmall, GetStep2(sharedBaseThicknessLimits), sharedBaseThicknessLimits, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000028"), uiColorSliderBase, 6, 0);		// #autoLOC_B9_Aerospace_WingStuff_1000028 = Thickness (tip)
                 }
 
                 if (!isCtrlSrf)
@@ -3285,7 +3309,8 @@ namespace WingProcedural
                     DrawFieldGroupHeader(ref sharedFieldGroupEdgeLeadingStatic, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000029"));		// #autoLOC_B9_Aerospace_WingStuff_1000029 = Edge (leading)
                     if (sharedFieldGroupEdgeLeadingStatic)
                     {
-                        DrawInt(ref sharedEdgeTypeLeading, sharedIncrementInt, 1, 4, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000030"), uiColorSliderEdgeL, 7, 2);		// #autoLOC_B9_Aerospace_WingStuff_1000030 = Shape
+                        Vector2 edgeLimits = GetLimitsFromType(sharedEdgeTypeLimits);
+                        DrawInt(ref sharedEdgeTypeLeading, sharedIncrementInt, (int)edgeLimits.x, (int)edgeLimits.y, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000030"), uiColorSliderEdgeL, 7, 2);		// #autoLOC_B9_Aerospace_WingStuff_1000030 = Shape
                         DrawField(ref sharedEdgeWidthLeadingRoot, sharedIncrementSmall, GetStep(sharedEdgeWidthLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000031"), uiColorSliderEdgeL, 8, 0, ref sharedEdgeWidthLRInt);		// #autoLOC_B9_Aerospace_WingStuff_1000031 = Width (root)
                         DrawField(ref sharedEdgeWidthLeadingTip, sharedIncrementSmall, GetStep(sharedEdgeWidthLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000032"), uiColorSliderEdgeL, 9, 0, ref sharedEdgeWidthLTInt);		// #autoLOC_B9_Aerospace_WingStuff_1000032 = Width (tip)
                     }
@@ -3295,7 +3320,8 @@ namespace WingProcedural
                 DrawFieldGroupHeader(ref sharedFieldGroupEdgeTrailingStatic, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000033"));		// #autoLOC_B9_Aerospace_WingStuff_1000033 = Edge (trailing)
                 if (sharedFieldGroupEdgeTrailingStatic)
                 {
-                    DrawInt(ref sharedEdgeTypeTrailing, sharedIncrementInt, 1, 4, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000034"), uiColorSliderEdgeT, 10, isCtrlSrf ? 3 : 2);		// #autoLOC_B9_Aerospace_WingStuff_1000034 = Shape
+                    Vector2 edgeLimits = GetLimitsFromType(sharedEdgeTypeLimits);
+                    DrawInt(ref sharedEdgeTypeTrailing, sharedIncrementInt, (int)edgeLimits.x, (int)edgeLimits.y, Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000034"), uiColorSliderEdgeT, 10, isCtrlSrf ? 3 : 2);		// #autoLOC_B9_Aerospace_WingStuff_1000034 = Shape
                     DrawField(ref sharedEdgeWidthTrailingRoot, sharedIncrementSmall, GetStep(sharedEdgeWidthLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000035"), uiColorSliderEdgeT, 11, 0, ref sharedEdgeWidthTRInt);		// #autoLOC_B9_Aerospace_WingStuff_1000035 = Width (root)
                     DrawField(ref sharedEdgeWidthTrailingTip, sharedIncrementSmall, GetStep(sharedEdgeWidthLimits), Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000036"), uiColorSliderEdgeT, 12, 0, ref sharedEdgeWidthTTInt);		// #autoLOC_B9_Aerospace_WingStuff_1000036 = Width (tip)
                 }
@@ -3503,7 +3529,7 @@ namespace WingProcedural
         /// <param name="allowFine">Whether right click drag behaves as fine control or not</param>
         private void DrawField(ref float field, float increment, float step, string name, Vector4 hsbColor, int fieldID, int fieldType, ref int delta, bool allowFine = true)
         {
-            float Cached = field;
+            float cached = field;
             field = UIUtility.FieldSlider(field, increment, step, name, out bool changed, ColorHSBToRGB(hsbColor), fieldType, ref delta, allowFine);
 
             if (changed)
@@ -3516,7 +3542,7 @@ namespace WingProcedural
 
         private void DrawOffset(ref float field, float increment, float range, string name, Vector4 hsbColor, int fieldID, int fieldType, ref int delta, bool allowFine = true)
         {
-            field = UIUtility.OffsetSlider(field, increment, range, name, out bool changed, ColorHSBToRGB(hsbColor), fieldType, ref delta, allowFine);
+            float cached = field;            field = UIUtility.OffsetSlider(field, increment, range, name, out bool changed, ColorHSBToRGB(hsbColor), fieldType, ref delta, allowFine);
 
             if (changed)
             {
@@ -3548,7 +3574,7 @@ namespace WingProcedural
         }
         private void DrawInt(ref float field, float incrementLarge, int min, int max, string name, Vector4 hsbColor, int fieldID, int fieldType, bool allowFine = true)
         {
-            field = UIUtility.IntegerSlider(field, incrementLarge, min, max, name, out bool changed, ColorHSBToRGB(hsbColor), fieldType, allowFine);
+            float cached = field;            field = UIUtility.IntegerSlider(field, incrementLarge, min, max, name, out bool changed, ColorHSBToRGB(hsbColor), fieldType, allowFine);
 
             if (changed)
             {
@@ -3750,11 +3776,11 @@ namespace WingProcedural
             else if (fieldID == 104)
                 return "not yet implemented";
             else if (fieldID == 105)
-                return Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000168");		// #autoLOC_B9_Aerospace_WingStuff_1000168 = Change wing root width \ninstead of wing tip for angle define 
+                return Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000175");		// #autoLOC_B9_Aerospace_WingStuff_1000175 = Change wing root width \ninstead of wing tip for angle define 
             else if (fieldID == 106)
-                return Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000169");		// #autoLOC_B9_Aerospace_WingStuff_1000169 = Lock wing tip offset \n instead of wing root offset for angle define
+                return Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000176");		// #autoLOC_B9_Aerospace_WingStuff_1000176 = Lock wing tip offset \n instead of wing root offset for angle define
             else if (fieldID == 107)
-                return Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000170");		// #autoLOC_B9_Aerospace_WingStuff_1000170 = Lock wing width \n while modify angles
+                return Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000177");		// #autoLOC_B9_Aerospace_WingStuff_1000177 = Lock wing width \n while modify angles
             else if (fieldID == 201)
                 return Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000112");		// #autoLOC_B9_Aerospace_WingStuff_1000112 = Angle between front edge and root.\n<90 deg is to the back
             else if (fieldID == 202)
@@ -4441,6 +4467,61 @@ namespace WingProcedural
         }
 
 
+
+        /// <summary>
+        /// lifting vs structural changed, re set configurations
+        /// </summary>
+        public void LiftStructuralTypeChanged()
+        {
+            if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateGeometry)
+            {
+                DebugLogWithID("UpdateGeometry", "Lifting Surface Type Change | Finished");
+            }
+
+            WingSetLiftingSurface();
+            foreach (Part p in part.symmetryCounterparts)
+            {
+                if (p == null) // fixes nullref caused by removing mirror sym while hovering over attach location
+                {
+                    continue;
+                }
+
+                WingProcedural wing = FirstOfTypeOrDefault<WingProcedural>(p.Modules);
+                if (wing != null)
+                {
+                    wing.aeroIsLiftingSurface = aeroIsLiftingSurface;
+                    wing.WingSetLiftingSurface();
+                }
+            }
+
+            UpdateWindow();
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
+            }
+        }
+
+        /// <summary>
+        /// Updates wing lift settings
+        /// </summary>
+        public void WingSetLiftingSurface()
+        {
+            if (!(CanBeFueled && HighLogic.LoadedSceneIsEditor) || assemblyFARUsed)
+            {
+                return;
+            }
+
+            CalculateAerodynamicValues();
+
+            if (aeroIsLiftingSurface)
+            {
+                Events["ToggleLiftConfiguration"].guiName = Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000163");//Surface Config: Lifting
+            }
+            else
+            {
+                Events["ToggleLiftConfiguration"].guiName = Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000164");//Surface Config: Not Lifting
+            }
+        }
 
         /// <summary>
         /// Updates part.Resources to match the changes or notify MFT/RF if applicable
