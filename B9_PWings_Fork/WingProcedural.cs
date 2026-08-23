@@ -4491,11 +4491,8 @@ namespace WingProcedural
                 {
                     wing.aeroIsLiftingSurface = aeroIsLiftingSurface;
                     wing.WingSetLiftingSurface();
-                    wing.SyncFARLiftingSurface();
                 }
             }
-
-            SyncFARLiftingSurface();
 
             UpdateWindow();
         }
@@ -4519,40 +4516,6 @@ namespace WingProcedural
             else
             {
                 Events["ToggleLiftConfiguration"].guiName = Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000164");//Surface Config: Not Lifting
-            }
-        }
-
-        // When FAR is active, whether this part contributes wing lift is governed by the presence of
-        // FAR's FARControllableSurface module: "Not Lifting" removes it (FAR then treats the part as a
-        // body), "Lifting" re-adds it (FAR treats it as a wing again). Accessed by module name so there
-        // is no hard compile-time dependency on FAR.
-        public void SyncFARLiftingSurface()
-        {
-            if (!assemblyFARUsed) return;
-
-            PartModule farCsf = null;
-            for (int i = 0; i < part.Modules.Count; i++)
-            {
-                if (part.Modules[i].moduleName == "FARControllableSurface")
-                {
-                    farCsf = part.Modules[i];
-                    break;
-                }
-            }
-
-            if (aeroIsLiftingSurface)
-            {
-                if (farCsf == null)
-                {
-                    part.AddModule("FARControllableSurface");
-                }
-            }
-            else
-            {
-                if (farCsf != null)
-                {
-                    part.RemoveModule(farCsf);
-                }
             }
         }
 
