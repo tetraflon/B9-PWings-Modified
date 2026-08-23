@@ -4318,7 +4318,7 @@ namespace WingProcedural
 
         private Vector2 GetVertexUV2(float selectedLayer)
         {
-            return selectedLayer == 0 ? new Vector2(0f, 1f) : new Vector2((selectedLayer - 1f) / 3f, 0f);
+            return new Vector2(selectedLayer == 0 ? 0f : (selectedLayer - 1f) / 3f, 1f);
         }
 
         private Color ColorHSBToRGB(Vector4 hsbColor)
