@@ -3236,11 +3236,6 @@ namespace WingProcedural
                     ToggleLiftConfiguration();
                 }
 
-                if (GUILayout.Button(Localizer.Format("#autoLOC_B9_Aerospace_WingStuff_1000178"), UIUtility.uiStyleButton, GUILayout.MaxWidth(50f)))		// #autoLOC_B9_Aerospace_WingStuff_1000178 = Update
-                {
-                    CalcBase(angleType);
-                }
-
                     GUILayout.EndVertical();
 
                 GUILayout.EndHorizontal();
