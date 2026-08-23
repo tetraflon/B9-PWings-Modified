@@ -2363,40 +2363,25 @@ namespace WingProcedural
 
         private void SetTextures(MeshFilter sourceSurface, MeshFilter sourceEdge)
         {
-            if (sourceSurface != null)
+            // Legacy (stock shader) rendering always uses the part's own layered textures
+            // (the textured set from the backup install: wing_surface_layered.dds + _colormask.dds).
+            // The source mesh material belongs to the part prefab, but when TURD/TexturesUnlimited
+            // is installed its sharedMaterial has been replaced by a TU material whose _MainTex /
+            // _Emissive are not the layered pair we want for stock rendering.
+            materialLayeredSurfaceTextureMain = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Parts/Aero_Wing_Procedural/wing_surface_layered", false);
+            materialLayeredSurfaceTextureMask = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Parts/Aero_Wing_Procedural/wing_surface_layered_colormask", false);
+
+            if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateMaterials)
             {
-                Renderer r = sourceSurface.gameObject.GetComponent<Renderer>();
-                if (r != null)
-                {
-                    materialLayeredSurfaceTextureMain = r.sharedMaterial.GetTexture("_MainTex");
-                    materialLayeredSurfaceTextureMask = r.sharedMaterial.GetTexture("_Emissive");
-                    if (materialLayeredSurfaceTextureMain == null)
-                        materialLayeredSurfaceTextureMain = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Textures/Mains/B9PWings-Metal-DIFF", false);
-                    if (materialLayeredSurfaceTextureMask == null)
-                        materialLayeredSurfaceTextureMask = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Textures/Masks/B9PWings-Solid-MASK", false);
-                    if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateMaterials)
-                    {
-                        DebugLogWithID("SetTextures", "Main: " + materialLayeredSurfaceTextureMain.ToString() + " | Mask: " + materialLayeredSurfaceTextureMask);
-                    }
-                }
+                DebugLogWithID("SetTextures", "Surface Main: " + materialLayeredSurfaceTextureMain + " | Mask: " + materialLayeredSurfaceTextureMask);
             }
 
-            if (sourceEdge != null)
+            materialLayeredEdgeTextureMain = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Parts/Aero_Wing_Procedural/wing_edge_layered", false);
+            materialLayeredEdgeTextureMask = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Parts/Aero_Wing_Procedural/wing_edge_layered_colormask", false);
+
+            if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateMaterials)
             {
-                Renderer r = sourceEdge.gameObject.GetComponent<Renderer>();
-                if (r != null)
-                {
-                    materialLayeredEdgeTextureMain = r.sharedMaterial.GetTexture("_MainTex");
-                    materialLayeredEdgeTextureMask = r.sharedMaterial.GetTexture("_Emissive");
-                    if (materialLayeredEdgeTextureMain == null)
-                        materialLayeredEdgeTextureMain = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Textures/Mains/B9PWings-Metal-DIFF", false);
-                    if (materialLayeredEdgeTextureMask == null)
-                        materialLayeredEdgeTextureMask = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Textures/Masks/B9PWings-Solid-MASK", false);
-                    if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateMaterials)
-                    {
-                        DebugLogWithID("SetTextures", "Main: " + materialLayeredEdgeTextureMain.ToString() + " | Mask: " + materialLayeredEdgeTextureMask);
-                    }
-                }
+                DebugLogWithID("SetTextures", "Edge Main: " + materialLayeredEdgeTextureMain + " | Mask: " + materialLayeredEdgeTextureMask);
             }
         }
 
