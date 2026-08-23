@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>B9_Aerospace_WingStuff</RootNamespace>
 
-    <AssemblyName>B9-PWings-Fork</AssemblyName>
+    <AssemblyName>B9_Aerospace_WingStuff</AssemblyName>
 
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
