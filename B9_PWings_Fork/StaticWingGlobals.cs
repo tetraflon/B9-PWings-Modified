@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -29,10 +29,25 @@ namespace WingProcedural
             _bundlePath = KSPUtil.ApplicationRootPath + "GameData"
                 + Path.DirectorySeparatorChar + "B9_Aerospace_ProceduralWings"
                 + Path.DirectorySeparatorChar + "AssetBundles"
-                + Path.DirectorySeparatorChar + "pwings_allplatforms.bundle";
+                + Path.DirectorySeparatorChar;
 
             if (Instance != null) Destroy(Instance);
             Instance = this;
+        }
+
+        // Load the platform-specific bundle so the previous (default) wing shader is used.
+        public string BundlePath
+        {
+            get
+            {
+                switch (Application.platform)
+                {
+                    case RuntimePlatform.OSXPlayer: return _bundlePath + "pwings_macosx.bundle";
+                    case RuntimePlatform.WindowsPlayer: return _bundlePath + "pwings_windows.bundle";
+                    case RuntimePlatform.LinuxPlayer: return _bundlePath + "pwings_linux.bundle";
+                    default: return _bundlePath + "pwings_windows.bundle";
+                }
+            }
         }
 
         public void Start()
@@ -60,7 +75,7 @@ namespace WingProcedural
         public IEnumerator LoadBundleAssets()
         {
             Debug.Log("[B9PW] Aquiring bundle data");
-            AssetBundle shaderBundle = AssetBundle.LoadFromFile(_bundlePath);
+            AssetBundle shaderBundle = AssetBundle.LoadFromFile(BundlePath);
 
             if (shaderBundle != null)
             {
