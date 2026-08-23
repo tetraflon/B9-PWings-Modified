@@ -570,7 +570,7 @@ namespace WingProcedural
         public void ToggleLiftConfiguration()
         {
 
-            if (!CanBeFueled || assemblyFARUsed)
+            if (!CanBeFueled)
             {
                 return;
             }
@@ -4495,10 +4495,6 @@ namespace WingProcedural
             }
 
             UpdateWindow();
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
-            }
         }
 
         /// <summary>
@@ -4506,7 +4502,7 @@ namespace WingProcedural
         /// </summary>
         public void WingSetLiftingSurface()
         {
-            if (!(CanBeFueled && HighLogic.LoadedSceneIsEditor) || assemblyFARUsed)
+            if (!(CanBeFueled && HighLogic.LoadedSceneIsEditor))
             {
                 return;
             }
