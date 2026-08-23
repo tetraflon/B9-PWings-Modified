@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using KSP.Localization;
 
@@ -25,6 +26,42 @@ namespace WingProcedural
 
         public static bool numericInput = false;
         public static bool angleChangd = false;
+
+        // Draft text for numeric text fields while they are being edited, keyed by control name.
+        // Numeric input only commits when the field loses keyboard focus, so intermediate typing
+        // (e.g. "4" while entering "45") does not get applied mid-edit (and does not corrupt the geometry).
+        private static readonly Dictionary<string, string> _numericDraft = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Draw a numeric text field whose value only commits when the field loses keyboard focus.
+        /// Returns true (and sets <paramref name="parsed"/>) only on the frame the field is committed.
+        /// </summary>
+        private static bool NumericTextField(Rect rect, float currentValue, string name, out float parsed)
+        {
+            parsed = currentValue;
+            string ctrlName = "wpNum_" + name;
+            GUI.SetNextControlName(ctrlName);
+            string focused = GUI.GetNameOfFocusedControl();
+
+            if (focused == ctrlName)
+            {
+                // Currently editing: hold the typed text as a draft and do NOT commit yet.
+                if (!_numericDraft.TryGetValue(ctrlName, out var draft))
+                    draft = currentValue.ToString("F3");
+                _numericDraft[ctrlName] = GUI.TextField(rect, draft, uiStyleInputField);
+                return false;
+            }
+
+            // Not focused. If we had a draft for this control it just lost focus -> commit it.
+            GUI.TextField(rect, currentValue.ToString("F3"), uiStyleInputField);
+            if (_numericDraft.TryGetValue(ctrlName, out var committed))
+            {
+                _numericDraft.Remove(ctrlName);
+                if (float.TryParse(committed, out parsed))
+                    return true;
+            }
+            return false;
+        }
 
         public static void ConfigureStyles()
         {
@@ -230,7 +267,7 @@ namespace WingProcedural
             }
             else
             {
-                if (float.TryParse(GUI.TextField(rectLabelValue, value.ToString("F3"), UIUtility.uiStyleInputField), out var temp)) // Add optional numeric input
+                if (NumericTextField(rectLabelValue, value, name, out var temp))
                 {
                     if (!buttonAdjust)
                     {
@@ -343,7 +380,7 @@ namespace WingProcedural
             else
             {
                 value -= range / 2;
-                if (float.TryParse(GUI.TextField(rectLabelValue, value.ToString("F3"), UIUtility.uiStyleInputField), out var temp)) // Add optional numeric input
+                if (NumericTextField(rectLabelValue, value, name, out var temp))
                 {
                     if (!buttonAdjust)
                     {
@@ -453,7 +490,7 @@ namespace WingProcedural
             }
             else
             {
-                if (float.TryParse(GUI.TextField(rectLabelValue, value.ToString("F3"), UIUtility.uiStyleInputField), out var temp)) // Add optional numeric input
+                if (NumericTextField(rectLabelValue, value, name, out var temp))
                 {
                     if (!buttonAdjust)
                     {
@@ -461,11 +498,7 @@ namespace WingProcedural
                         value01 = (value - limits.x) / range;
                     }
                     else
-
                         value = Mathf.Clamp((float)(value01 * range + limits.x), limits.x, limits.y);
-                  
-                         // merge conflict here
-                        value = Mathf.Clamp((float)(value01 * range + limits.x), Mathf.Min((float)(limits.x * 0.5), limits.x), limits.y); // lower limit is halved so the fine control can reduce it further but the normal tweak still snaps. Min makes -ve values work
                 }
                 value = Mathf.Clamp(value, limits.x, limits.y);
             }
@@ -550,7 +583,7 @@ namespace WingProcedural
             }
             else
             {
-                if (float.TryParse(GUI.TextField(rectLabelValue, value.ToString("F3"), UIUtility.uiStyleInputField), out var temp)) // Add optional numeric input
+                if (NumericTextField(rectLabelValue, value, name, out var temp))
                 {
                     if (!buttonAdjust)
                     {
