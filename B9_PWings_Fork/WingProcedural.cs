@@ -2370,6 +2370,10 @@ namespace WingProcedural
                 {
                     materialLayeredSurfaceTextureMain = r.sharedMaterial.GetTexture("_MainTex");
                     materialLayeredSurfaceTextureMask = r.sharedMaterial.GetTexture("_Emissive");
+                    if (materialLayeredSurfaceTextureMain == null)
+                        materialLayeredSurfaceTextureMain = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Textures/Mains/B9PWings-Metal-DIFF", false);
+                    if (materialLayeredSurfaceTextureMask == null)
+                        materialLayeredSurfaceTextureMask = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Textures/Masks/B9PWings-Solid-MASK", false);
                     if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateMaterials)
                     {
                         DebugLogWithID("SetTextures", "Main: " + materialLayeredSurfaceTextureMain.ToString() + " | Mask: " + materialLayeredSurfaceTextureMask);
@@ -2384,6 +2388,10 @@ namespace WingProcedural
                 {
                     materialLayeredEdgeTextureMain = r.sharedMaterial.GetTexture("_MainTex");
                     materialLayeredEdgeTextureMask = r.sharedMaterial.GetTexture("_Emissive");
+                    if (materialLayeredEdgeTextureMain == null)
+                        materialLayeredEdgeTextureMain = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Textures/Mains/B9PWings-Metal-DIFF", false);
+                    if (materialLayeredEdgeTextureMask == null)
+                        materialLayeredEdgeTextureMask = GameDatabase.Instance.GetTexture("B9_Aerospace_ProceduralWings/Textures/Masks/B9PWings-Solid-MASK", false);
                     if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateMaterials)
                     {
                         DebugLogWithID("SetTextures", "Main: " + materialLayeredEdgeTextureMain.ToString() + " | Mask: " + materialLayeredEdgeTextureMask);
