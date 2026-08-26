@@ -2338,7 +2338,9 @@ namespace WingProcedural
                     if (r != null && r.sharedMaterial != null)
                     {
                         Material m = r.sharedMaterial;
-                        DebugLogWithID("UpdateMaterials", "surface renderer | shader=" + m.shader.name + " | MainTex bound=" + (m.GetTexture("_MainTex") != null) + " | Emissive bound=" + (m.GetTexture("_Emissive") != null) + " | is our material=" + (m == materialLayeredSurface));
+                        Texture mt = m.GetTexture("_MainTex");
+                        Texture em = m.GetTexture("_Emissive");
+                        DebugLogWithID("UpdateMaterials", "surface renderer | shader=" + m.shader.name + " | MainTex=" + (mt == null ? "NULL" : mt.name) + " | Emissive=" + (em == null ? "NULL" : em.name) + " | is our material=" + (m == materialLayeredSurface));
                     }
                 }
             }
@@ -2454,6 +2456,12 @@ namespace WingProcedural
                     EnsureMaterial(meshFiltersCtrlEdge[i], materialLayeredEdge);
                 }
             }
+
+            // TURD can also modify a wing material IN PLACE without swapping the
+            // sharedMaterial (it writes its texture set / TU/Metallic textures into
+            // whatever material the renderers use). Identity checks above miss that,
+            // so also verify the bound textures and re-assert our layered pair.
+            EnsureTextures();
         }
 
         private void EnsureMaterial(MeshFilter target, Material material)
@@ -2470,6 +2478,34 @@ namespace WingProcedural
         private void LogMaterialChange(string method, string rendererName, Material current)
         {
             DebugLogWithID(method, rendererName + " -> was " + (current == null ? "NULL" : current.shader.name));
+        }
+
+        private void EnsureTextures()
+        {
+            FixTextures(materialLayeredSurface, materialLayeredSurfaceTextureMain, materialLayeredSurfaceTextureMask);
+            FixTextures(materialLayeredEdge, materialLayeredEdgeTextureMain, materialLayeredEdgeTextureMask);
+        }
+
+        private float lastTextureFixLog = -100f;
+
+        private void FixTextures(Material mat, Texture diff, Texture mask)
+        {
+            if (mat == null) return;
+            Texture main = mat.GetTexture("_MainTex");
+            Texture emis = mat.GetTexture("_Emissive");
+            if (main != diff || emis != mask)
+            {
+                if (Time.realtimeSinceStartup - lastTextureFixLog > 5f)
+                {
+                    lastTextureFixLog = Time.realtimeSinceStartup;
+                    DebugLogWithID("FixTextures", mat.name + " | MainTex was " + (main == null ? "NULL" : main.name) + " | Emissive was " + (emis == null ? "NULL" : emis.name) + " -> re-binding layered pair");
+                }
+                if (diff != null) mat.SetTexture("_MainTex", diff);
+                if (mask != null) mat.SetTexture("_Emissive", mask);
+                // restore our specular/shine too (TU UI may have touched them)
+                mat.SetFloat("_Shininess", materialPropertyShininess);
+                mat.SetColor("_SpecColor", materialPropertySpecular);
+            }
         }
 
         private void SetTextures(MeshFilter sourceSurface, MeshFilter sourceEdge)
