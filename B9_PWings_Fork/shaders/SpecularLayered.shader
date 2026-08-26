@@ -142,19 +142,26 @@ Shader "KSP/Specular Layered"
 					saturate(IN.uv2_Emissive.x * 3 - 1)
 				);
 			
-			// composite: multiply-tint with a contrast stretch so the layered pattern
-			// (panel lines in the DIFF channels) stays clearly visible under the vertex colour.
-			// A mask-lerp washes the lines out when the mask channel is ~0.9 (Standard/Reinforced/LRSI).
-			//   pattern = saturate((albedo - 0.45) * 2.2)   (stretch: lines -> dark, panels -> bright)
-			//   uv2_Emissive.y == 1 -> uniform/coat fill: pure vertex colour
-			//   uv2_Emissive.y == 0 -> material layer: pattern * colour (multiply tint)
+			// Original Bac9 composite -- restores the stock/backup look:
+			//   - DIFF channel = base grayscale pattern; with fill factor 0 (default) the
+			//     wing shows the bare grayscale panel pattern
+			//   - MASK channel drives the blend to the vertex colour: black lines in the
+			//     mask lean toward saturate(albedo + albedo^2) (bright panel lines), white
+			//     mask panels take the vertex colour
+			//   - uv2_Emissive.y == 1 -> uniform/coat fill: pure vertex colour
+			//   - IN.color.w (opacity) = overall fill factor (0 grayscale -> 1 colour)
 			float3 composite =
 				lerp
 				(
 					albedoGrayscaleAndMask.xxx,
 					lerp
 					(
-						saturate((albedoGrayscaleAndMask.xxx - 0.45f) * 2.2f) * IN.color.xyz,
+						lerp
+						(
+							saturate(albedoGrayscaleAndMask.x + ((1 - albedoGrayscaleAndMask.y) * pow(albedoGrayscaleAndMask.x, 2))).xxx,
+							IN.color.xyz,
+							albedoGrayscaleAndMask.y
+						),
 						IN.color.xyz,
 						IN.uv2_Emissive.y
 					),

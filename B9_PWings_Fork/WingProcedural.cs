@@ -2330,6 +2330,17 @@ namespace WingProcedural
                         SetMaterial(meshFiltersCtrlEdge[i], materialLayeredEdge);
                     }
                 }
+
+                if (meshFilterWingSurface != null || meshFilterCtrlSurface != null)
+                {
+                    MeshFilter surf = isCtrlSrf ? meshFilterCtrlSurface : meshFilterWingSurface;
+                    Renderer r = surf != null ? surf.gameObject.GetComponent<Renderer>() : null;
+                    if (r != null && r.sharedMaterial != null)
+                    {
+                        Material m = r.sharedMaterial;
+                        DebugLogWithID("UpdateMaterials", "surface renderer | shader=" + m.shader.name + " | MainTex bound=" + (m.GetTexture("_MainTex") != null) + " | Emissive bound=" + (m.GetTexture("_Emissive") != null) + " | is our material=" + (m == materialLayeredSurface));
+                    }
+                }
             }
             else if (HighLogic.CurrentGame.Parameters.CustomParams<WPDebug>().logUpdateMaterials)
             {
@@ -2383,6 +2394,15 @@ namespace WingProcedural
             {
                 DebugLogWithID("SetMaterialReferences", "Edge textures not found");
             }
+
+            if (meshFilterWingSurface != null && meshFilterWingSurface.mesh != null)
+            {
+                Mesh mm = meshFilterWingSurface.mesh;
+                DebugLogWithID("SetMaterialReferences", "mesh | uv=" + mm.uv.Length + " uv2=" + mm.uv2.Length + " col=" + mm.colors.Length +
+                    (mm.uv.Length > 0 ? " | uv[0]=" + mm.uv[0] : "") +
+                    (mm.uv2.Length > 0 ? " | uv2[0]=" + mm.uv2[0] : "") +
+                    (mm.colors.Length > 0 ? " | col[0]=" + mm.colors[0] : ""));
+            }
         }
 
         private void SetMaterial(MeshFilter target, Material material)
@@ -2392,9 +2412,64 @@ namespace WingProcedural
                 Renderer r = target.gameObject.GetComponent<Renderer>();
                 if (r != null)
                 {
+                    if (r.sharedMaterial != material)
+                    {
+                        DebugLogWithID("SetMaterial", "Re-assign on " + target.gameObject.name + ": was " + (r.sharedMaterial == null ? "NULL" : r.sharedMaterial.shader.name));
+                    }
                     r.sharedMaterial = material;
                 }
             }
+        }
+
+        // In legacy ("Original") mode, keep our layered materials bound on every wing
+        // renderer even if another module (TURD/TexturesUnlimited or KSP) swaps the
+        // sharedMaterial after an update. In TU mode (ApplyLegacyTextures == false)
+        // this does nothing, so TU keeps full control.
+        private void LateUpdate()
+        {
+            if (part == null || materialLayeredSurface == null) return;
+            if (!ApplyLegacyTextures()) return;
+
+            EnsureMaterial(meshFilterWingSurface, materialLayeredSurface);
+            EnsureMaterial(meshFilterCtrlSurface, materialLayeredSurface);
+            EnsureMaterial(meshFilterCtrlFrame, materialLayeredEdge);
+            if (meshFiltersWingEdgeTrailing != null)
+            {
+                for (int i = 0; i < meshFiltersWingEdgeTrailing.Count; ++i)
+                {
+                    EnsureMaterial(meshFiltersWingEdgeTrailing[i], materialLayeredEdge);
+                }
+            }
+            if (meshFiltersWingEdgeLeading != null)
+            {
+                for (int i = 0; i < meshFiltersWingEdgeLeading.Count; ++i)
+                {
+                    EnsureMaterial(meshFiltersWingEdgeLeading[i], materialLayeredEdge);
+                }
+            }
+            if (meshFiltersCtrlEdge != null)
+            {
+                for (int i = 0; i < meshFiltersCtrlEdge.Count; ++i)
+                {
+                    EnsureMaterial(meshFiltersCtrlEdge[i], materialLayeredEdge);
+                }
+            }
+        }
+
+        private void EnsureMaterial(MeshFilter target, Material material)
+        {
+            if (target == null || material == null) return;
+            Renderer r = target.gameObject.GetComponent<Renderer>();
+            if (r != null && r.sharedMaterial != material)
+            {
+                LogMaterialChange("EnsureMaterial", target.gameObject.name, r.sharedMaterial);
+                r.sharedMaterial = material;
+            }
+        }
+
+        private void LogMaterialChange(string method, string rendererName, Material current)
+        {
+            DebugLogWithID(method, rendererName + " -> was " + (current == null ? "NULL" : current.shader.name));
         }
 
         private void SetTextures(MeshFilter sourceSurface, MeshFilter sourceEdge)
